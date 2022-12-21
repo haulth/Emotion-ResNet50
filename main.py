@@ -115,7 +115,8 @@ class Classifier:
         :param image: a PIL image with arbitrary size
         :return: a string ('Angry', 'Disgust','Fear','Happy','Neutral','Sad','Surprise')
         """
-        np_image = np.array(image.resize([96, 96]))
+        #image = image.resize([96, 96])
+        np_image = np.array(image)
         batch_images = np.array([np_image])
         y_prob_batch = self.model.predict(batch_images)
         y_pred_batch = np.argmax(y_prob_batch, axis = 1)
