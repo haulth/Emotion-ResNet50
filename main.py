@@ -20,6 +20,48 @@ from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.metrics import SparseCategoricalAccuracy
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 
+
+list_label = ['Angry', 'Disgust','Fear','Happy','Neutral','Sad','Surprise']
+label_map = {item: idx for idx, item in enumerate(list_label)}
+
+class DataLoader(Sequence):
+    def __init__(self, batch_size, dataset_path, label_map):
+      self.batch_size = batch_size
+      self.list_filenames = glob.glob(os.path.join(dataset_path, '*/*.*'))
+      self.label_map = label_map
+
+      self.indices = np.random.permutation(len(self.list_filenames))
+
+    def __len__(self):
+      return int(len(self.list_filenames) / self.batch_size)
+
+    def __getitem__(self, idx):
+      list_np_image = []
+      list_labels = []
+      # for tu 0 den 32
+      for idx_batch in range(self.batch_size):
+        idx_dataset = idx * self.batch_size + idx_batch
+        idx_filename = self.indices[idx_dataset]
+        filename = self.list_filenames[idx_filename]
+
+        
+        np_image = np.array(Image.open(filename).convert('RGB').resize([96, 96]))
+        list_np_image.append(np_image)
+
+        original_label = filename.split('/')[-2]
+        label = self.label_map[original_label]
+        
+        list_labels.append(label)
+      
+      batch_images = np.array(list_np_image)
+        
+      batch_labels = np.array(list_labels)
+
+      return batch_images, batch_labels
+
+    def on_epoch_end(self):
+        self.indices = np.random.permutation(len(self.list_filenames))
+
 class Classifier:
     def __init__(self):
         self.model = None
