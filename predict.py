@@ -47,6 +47,8 @@ classifier.load_model()
 
  
 img = scaled.copy()
+#convert to grayscale
+#img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 classifier.predict(img)
 cv2.imshow("image", img)
