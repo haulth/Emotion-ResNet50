@@ -121,6 +121,7 @@ class Classifier:
         y_prob_batch = self.model.predict(batch_images)
         y_pred_batch = np.argmax(y_prob_batch, axis = 1)
         y_predict = y_pred_batch[0]
+        print(y_predict)
         print("Kết quả mô hình dự đoán là:",self.list_labels[y_predict])
         
         return self.list_labels[y_predict]
