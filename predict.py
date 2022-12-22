@@ -5,17 +5,30 @@ import tensorflow as tf
 import align.detect_face
 import numpy as np
 import facenet
+from imutils.video import VideoStream
+import imutils
+
 
 INPUT_IMAGE_SIZE = 96
 MINSIZE = 20
 THRESHOLD = [0.6, 0.7, 0.7]
 FACTOR = 0.709
-frame = cv2.imread("im2.jpg", cv2.IMREAD_COLOR)
+
 tf.compat.v1.disable_eager_execution()
 gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.6)
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
 with sess.as_default():
     pnet, rnet, onet = align.detect_face.create_mtcnn(sess, "align")
+cap  = VideoStream(src=1).start()
+classifier = Classifier()
+classifier.load_model()
+
+while(True):
+    frame = cap.read()
+    frame = imutils.resize(frame, width=600)
+    frame = cv2.flip(frame, 1)
+    #frame = cv2.imread("im2.jpg", cv2.IMREAD_COLOR)
+ 
     bounding_boxes, _ = align.detect_face.detect_face(frame, MINSIZE, pnet, rnet, onet, THRESHOLD, FACTOR)
 
     faces_found = bounding_boxes.shape[0]
@@ -39,16 +52,22 @@ with sess.as_default():
                     scaled = cv2.resize(cropped, (INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE),
                                         interpolation=cv2.INTER_CUBIC)
                     scaled = facenet.prewhiten(scaled)
+                    name = classifier.predict(scaled)
+                    #put name
+                    cv2.putText(frame, name, (bb[i][0], bb[i][1] - 10), cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                                1, (255, 255, 255), thickness=1, lineType=2)
+                    print("Name: {}".format(name))
     except:
-       pass
-classifier = Classifier()
-classifier.load_model()
+        pass
+
+    cv2.imshow('Face Emotion', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+    
 
 
- 
-img = scaled.copy()
-#convert to grayscale
-#img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-classifier.predict(img)
-cv2.imshow("image", img)
+    
