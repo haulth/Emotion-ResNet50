@@ -7,6 +7,7 @@ import numpy as np
 import facenet
 from imutils.video import VideoStream
 import imutils
+import matplotlib.pyplot as plt
 
 
 INPUT_IMAGE_SIZE = 96
@@ -19,6 +20,7 @@ gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.6)
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
 with sess.as_default():
     pnet, rnet, onet = align.detect_face.create_mtcnn(sess, "align")
+
 cap  = VideoStream(src=0).start()
 classifier = Classifier()
 classifier.load_model()
@@ -48,15 +50,25 @@ while(True):
                 print(frame.shape[0])
                 print((bb[i][3]-bb[i][1])/frame.shape[0])
                 if ((bb[i][3]-bb[i][1])/frame.shape[0])>0.25:
+
+                    print("Emotion detected")
                     cropped = frame[bb[i][1]:bb[i][3], bb[i][0]:bb[i][2], :]
                     scaled = cv2.resize(cropped, (INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE),
                                         interpolation=cv2.INTER_CUBIC)
-                    scaled = facenet.prewhiten(scaled)
+                    # scaled = facenet.prewhiten(scaled)
+                    # scaled_reshape = scaled.reshape(-1, INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE, 3)
+                    # #convert scaled_reshape to image
+                    # img = Image.fromarray(scaled_reshape, 'RGB')
+                    
                     name = classifier.predict(scaled)
                     #put name
                     cv2.putText(frame, name, (bb[i][0], bb[i][1] - 10), cv2.FONT_HERSHEY_COMPLEX_SMALL,
                                 1, (255, 255, 255), thickness=1, lineType=2)
+                    #put rectangle to main image
+                    cv2.rectangle(frame, (bb[i][0], bb[i][1]), (bb[i][2], bb[i][3]), (0, 255, 0), 2)
                     print("Name: {}".format(name))
+                    cv2.imshow('Face ', scaled)
+                    
     except:
         pass
 
